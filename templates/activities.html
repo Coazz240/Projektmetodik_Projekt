@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>activities</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+    </head>
+    <body>
+        <h1>Activity report</h1>
+        <label> Select user: </label>
+        <select id="users" name="users">
+            {% for u in users %}
+            <option value="{{u.id}}">{{ u.name }}</option>
+            {% endfor %}
+        </select>
+
+        <form>
+            <label>Category </label>
+            <input type="text" /> <br />
+            <br />
+            <label>Key </label>
+            <input type="text" /> <br />
+            <br />
+            <label>Amount </label>
+            <input type="text" /> <br />
+            <br />
+            <label>Date </label>
+            <input type="text" /> <br />
+            <br />
+            <button id="save_activity">Save</button>
+        </form>
+    </body>
+</html>
