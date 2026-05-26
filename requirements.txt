@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 fastapi>=0.110
 uvicorn[standard]>=0.27
 SQLAlchemy>=2.0
 pydantic>=2.6
+=======
+fastapi>=0.110
+uvicorn[standard]>=0.27
+SQLAlchemy>=2.0
+pydantic>=2.6
+>>>>>>> 147d6e3 (Ändringar i main.py för get /ui/reports/weekly , la till templates/weekly.html)
 python-dotenv>=1.0
