@@ -220,6 +220,7 @@ def ui_users(request: Request, db: Session = Depends(get_session)) -> HTMLRespon
 def ui_delete_user(user_id, request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
 
     tpl = templates.get_template("create_user.html")
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
     user = db.get(User, user_id)
 
     if not user:
@@ -253,11 +254,64 @@ def ui_delete_user(user_id, request: Request, db: Session = Depends(get_session)
 @app.get("/ui/activities", response_class=HTMLResponse)
 def ui_activity(request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
     tpl = templates.get_template("activities.html")
-    html = tpl.render({"request": request, "users": users})
+    html = tpl.render({"request": request, "users": users, "activities": activities})
     return HTMLResponse(html)
 
 
-@app.get("/ui/activities", response_class=HTMLResponse)
-def ui_activity_save_load(request: Request) -> HTMLResponse:
-    return HTMLResponse()
+@app.post("/ui/activities", response_class=HTMLResponse)
+def ui_activity_save(
+    request: Request,
+    name: str = Form(),
+    category: str = Form(""),
+    key: str = Form(""),
+    amount: float = Form(0.0),
+    date: dt.date = Form(None),
+    db: Session = Depends(get_session),
+) -> HTMLResponse:
+    tpl = templates.get_template("activities.html")
+    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+
+    category = category.strip()
+    key = key.strip()
+
+    if not category or not key:
+        html = tpl.render(
+            {
+                "request": request,
+                "name": name,
+                "category": category,
+                "key": key,
+                "amount": amount,
+                "date": date,
+                "activities": activities,
+                "message": None,
+                "error": "Category or key cannot be empty",
+                "users": users,
+            }
+        )
+        return HTMLResponse(html)
+
+    activitiy = Activity(user_id=name, category=category, key=key, amount=amount, date=date)
+    db.add(activitiy)
+    db.commit()
+
+    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
+    html = tpl.render(
+        {
+            "request": request,
+            "name": name,
+            "category": category,
+            "key": key,
+            "amount": amount,
+            "date": date,
+            "activities": activities,
+            "message": f"New activity added",
+            "error": None,
+            "users": users,
+        }
+    )
+
+    return HTMLResponse(html)
