@@ -1,6 +1,8 @@
 # Scrum Roles
 Scrum Master: brantegordin
+
 Product Owner: Coazz240
+
 Development Team: FamousRerro, Space2Code
 
 # Datum
