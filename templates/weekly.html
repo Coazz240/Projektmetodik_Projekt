@@ -24,7 +24,7 @@
 	}
 	</style>
 	<body>
-	<h1>Skapa Veckorapport</h1>
+	<h1>Veckorapport</h1>
 	
 {% if message %}
 		<p style="color: green;">{{ message }}</p>
@@ -33,16 +33,15 @@
 		<p style="color: red;">{{ error }}</p>
 	{% endif %}
 	
-	<h2>Välj användare</h2>
 	<form name="form1" id="form1" method="get" action="/ui/users">
-		<label for="subject">Skapa rapport för:</label>
+		<label for="subject">Visa rapport för:</label>
 		<select name="subject" id="subject" required>
 			<option value="" selected>Välj Användare</option>
 			{% for user in users %}
 				<option value="{{ user.id }}">{{ user.name }}</option>
 			{% endfor %}
 		</select>
-		<!-- <button type="submit">Skapa rapport</button> -->
+		
 	</form>
 	<form>
 	<label for="week_start">Ange veckostart</label>
@@ -50,7 +49,9 @@
 	<span>(YYYY-MM-DD, måndag)</span>
 	</form>
 	<form>
-	<button type="submit">Skapa rapport</button>
+	<button type="submit">Visa</button>
+	
+	
 	</form>
 	
 	</body>
