@@ -158,7 +158,7 @@ def weekly_report(
             # I projektet: bestäm hur “okända faktorer” ska hanteras
             continue
 
-    return WeeklyReportOut(user_id=user_id, week_start=start, week_end=end, total_co2e=total)
+    return WeeklyReportOut(user_id=user_id, week_start=start, week_end=end, total_co2e=round(total, 2))
     
 
 @app.get("/ui", response_class=HTMLResponse)
