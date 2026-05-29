@@ -252,11 +252,20 @@ def ui_delete_user(user_id, request: Request, db: Session = Depends(get_session)
 
 
 @app.get("/ui/activities", response_class=HTMLResponse)
-def ui_activity(request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
+def ui_load_activity(
+    request: Request,
+    db: Session = Depends(get_session),
+    name: str = Form(""),
+) -> HTMLResponse:
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
-    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
     tpl = templates.get_template("activities.html")
-    html = tpl.render({"request": request, "users": users, "activities": activities})
+    html = tpl.render({"request": request, "users": users, "activities": activities, "name": name})
+
     return HTMLResponse(html)
 
 
@@ -271,7 +280,11 @@ def ui_activity_save(
     db: Session = Depends(get_session),
 ) -> HTMLResponse:
     tpl = templates.get_template("activities.html")
-    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
 
     category = category.strip()
@@ -298,7 +311,12 @@ def ui_activity_save(
     db.add(activitiy)
     db.commit()
 
-    activities = list(db.execute(select(Activity).order_by(Activity.date.asc())).scalars().all())
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
+
     html = tpl.render(
         {
             "request": request,

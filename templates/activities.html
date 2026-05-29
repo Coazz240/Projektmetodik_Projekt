@@ -14,7 +14,8 @@
         {% endif %}
         <form method="post" action="/ui/activities">
             <label> Select user: </label>
-            <select id="name" name="name">
+            <select required="true" id="name" name="name">
+                <option>Välj en användare</option>
                 {% for u in users %}
                 <option value="{{u.id}}">{{ u.name }}</option>
                 {% endfor %}
@@ -35,6 +36,13 @@
             <br />
             <button id="save_activity" name="save_activity" type="submit">
                 Save
+            </button>
+            <button
+                style="background-color: darkgray"
+                type="button"
+                name="action"
+            >
+                Show List
             </button>
         </form>
 
