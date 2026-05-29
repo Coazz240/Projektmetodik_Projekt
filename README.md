@@ -14,7 +14,7 @@ Daily Scrum 26-05-2026
 
 Daily Scrum 28-05-2026
 
-Sprint Review 29-05-2026
+Sprint Review / Retrospective 29-05-2026
 
 ~~Daily Scrum xx-xx-2026~~
 
