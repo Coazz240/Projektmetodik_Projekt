@@ -215,3 +215,59 @@ def ui_delete_user(user_id, request: Request, db: Session = Depends(get_session)
     html = tpl.render({"request": request, "users": users, "message": f"Raderade användare '{deleted_name}' (id={user_id})", "error": None})
     return HTMLResponse(html)
         
+@app.get("/ui/reports/points", response_class=HTMLResponse)
+def ui_points_weekly(
+    request: Request,
+    user_id: int | None = None,
+    week_start: str | None = None,
+    db: Session = Depends(get_session),
+) -> HTMLResponse:
+
+    tpl = templates.get_template("points_weekly.html")
+
+    total = None
+    err = None
+    activities = []
+
+    if user_id is not None and week_start:
+        try:
+            start = dt.date.fromisoformat(week_start)
+            end = start + dt.timedelta(days=6)
+
+        except ValueError:
+            err = "Fel datumformat. Använd formatet YYYY-MM-DD."
+
+        else:
+            user = db.get(User, user_id)
+
+            if not user:
+                err = f"Användare med id {user_id} finns inte."
+
+            else:
+                stmt = (
+                    select(Activity)
+                    .where(Activity.user_id == user_id)
+                    .where(Activity.date >= start)
+                    .where(Activity.date <= end)
+                    .order_by(Activity.date.asc())
+                )
+
+                activities = list(db.execute(stmt).scalars().all())
+                factors = _load_factor_map(db)
+                total = 0.0
+                for activity in activities:
+                    try:
+                        total += calculate_co2e(
+                            activity.category,
+                            activity.key,
+                            activity.amount,
+                            factors,
+                        )
+                    except KeyError:
+                        continue
+
+                total = round(total, 2)
+
+    html = tpl.render({"request": request, "user_id": user_id, "week_start": week_start, "total": total, "err": err, "activities": activities})
+        
+    return HTMLResponse(html)
