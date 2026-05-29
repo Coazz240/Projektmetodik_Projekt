@@ -6,17 +6,19 @@ Product Owner: Coazz240
 Development Team: FamousRerro, Space2Code
 
 # Datum
-Sprint Planning Meeting 24-05-2026
+Sprint Planning 24-05-2026
 
-Daily Standup Scrum Meeting 25-05-2026
+Daily Scrum 25-05-2026
 
-Daily Standup Scrum Meeting 26-05-2026
+Daily Scrum 26-05-2026
 
-Sprint Review 27-05-2026
+Daily Scrum 28-05-2026
 
-~~Daily Standup Scrum Meeting xx-xx-2026~~
+Sprint Review 29-05-2026
 
-~~Daily Standup Scrum Meeting xx-xx-2026~~
+~~Daily Scrum xx-xx-2026~~
+
+~~Daily Scrum xx-xx-2026~~
 
 Project Presentation (.ppt) 01-06-2026
 
