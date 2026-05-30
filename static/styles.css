@@ -92,3 +92,42 @@ nav {
     justify-items: center;
     background-color: gainsboro;
 }
+
+table {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 40rem;
+}
+
+td,
+th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #04aa6d;
+    color: white;
+}
+
+td form {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+td form button[type="submit"] {
+    width: 100%;
+    background-color: indianred;
+}
+
+td form button[type="submit"]:hover {
+    background-color: firebrick;
+}

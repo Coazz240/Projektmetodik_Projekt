@@ -67,13 +67,13 @@
                     <th>Åtgärd</th>
                 </tr>
                 {% for a in activities %}
-                <tr>
-                    <th>{{ a.category }}</th>
-                    <th>{{ a.key }}</th>
-                    <th>{{ a.amount }}</th>
-                    <th>{{ a.date }}</th>
-                    <th><button>Delete</button></th>
-                </tr>
+                    <tr>
+                        <th>{{ a.category }}</th>
+                        <th>{{ a.key }}</th>
+                        <th>{{ a.amount }}</th>
+                        <th>{{ a.date }}</th>
+                        <th><button>Delete</button></th>
+                    </tr>
                 {% endfor %}
             </table>
         </div>
