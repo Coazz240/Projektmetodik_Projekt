@@ -1,30 +1,25 @@
 <!DOCTYPE html>
 
 <html lang="sv">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title>23brho01</title>
-			<style>
-			</style>
-	</head>
-	<style>
-	body {
-	font-size: 20px;
-	padding: 8px;
-	}
-	
-	input {
-	width: 100px;
-	height: 20px;
-	}
-	
-	button {
-	width: 100px;
-	}
-	</style>
+    <head>
+        <meta charset="UTF-8" />
+        <title>activities</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
 	<body>
-	<h1>Veckorapport</h1>
+		<nav>
+            <ul id="nav">
+                <li><a href="/ui">Main</a></li>
+                <li><a href="/ui/users">Handle Users</a></li>
+                <li><a href="/ui/activities">Activity Report</a></li>
+                <li><a href="/ui/reports/points">Weekly Report</a></li>
+                <li><a href="/docs">Docs</a></li>
+            </ul>
+        </nav>
+		<div id="title">
+			<h1>Veckorapport</h1>
+		</div>
 	
 {% if message %}
 		<p style="color: green;">{{ message }}</p>
@@ -56,10 +51,12 @@
 	<hr>
 
     {% if total is not none and not err %}
+		<div id="main">
         <h2>Resultat för veckan</h2>
         <p><strong>Total CO₂e:</strong> {{ total }} kg</p>
         
         {% endif %}
+		</div>
 	
 	</body>
 </html>

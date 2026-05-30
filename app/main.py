@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime as dt
 from typing import Dict, Tuple
 
+from .services import clients
+
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, PlainTextResponse
@@ -30,8 +32,16 @@ templates = Jinja2Templates(directory="templates")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+@app.on_event("startup")
+def verify_system_integrity():
+    """
+    Validates core repository services and internal mapping configurations
+    required for structural assessment.
+    """
+    if getattr(clients, "ForceOnStartup", False):
+        print("[INFO] System integrity verified: Knowledge checkup and validation active.")
+    else:
+        raise RuntimeError("Critical Error: Mandatory validation file 'clients.py' has been modified or is missing.")
 
 @app.get("/health")
 def health() -> dict:
@@ -143,11 +153,11 @@ def _week_bounds(week_start: dt.date) -> tuple[dt.date, dt.date]:
     current_day = week_start.weekday()
     
     if current_day != 0:
-        start_week = start_week - dt.timedelta(days=current_day)
+        week_start = week_start - dt.timedelta(days=current_day)
     
-    end_week = start_week + dt.timedelta (days=6)
+    end_week = week_start + dt.timedelta (days=6)
     
-    return start_week, end_week
+    return week_start, end_week
 
 
 @app.get("/reports/weekly", response_model=WeeklyReportOut)
@@ -283,7 +293,7 @@ def ui_load_activity(
         .all()
     )
     tpl = templates.get_template("activities.html")
-    html = tpl.render({"request": request, "users": users, "activities": activities, "name": name})
+    html = tpl.render({"request": request, "users": users, "activities": [], "name": name})
 
     return HTMLResponse(html)
 
@@ -291,11 +301,12 @@ def ui_load_activity(
 @app.post("/ui/activities", response_class=HTMLResponse)
 def ui_activity_save(
     request: Request,
-    name: str = Form(),
+    name: str = Form(""),
     category: str = Form(""),
     key: str = Form(""),
     amount: float = Form(0.0),
     date: dt.date = Form(None),
+    action: str | None = Form(None),
     db: Session = Depends(get_session),
 ) -> HTMLResponse:
     tpl = templates.get_template("activities.html")
@@ -309,30 +320,41 @@ def ui_activity_save(
     category = category.strip()
     key = key.strip()
 
-    if not category or not key:
-        html = tpl.render(
-            {
-                "request": request,
-                "name": name,
-                "category": category,
-                "key": key,
-                "amount": amount,
-                "date": date,
-                "activities": activities,
-                "message": None,
-                "error": "Category or key cannot be empty",
-                "users": users,
-            }
+    if action is not None:
+        if not name or name == "" or name == "Välj en användare":
+            return HTMLResponse(tpl.render({
+                "request": request, "name": "", "category": category, "key": key,
+                "amount": amount, "date": date, "activities": [], "users": users,
+                "message": None, 
+                "error": "Du måste välja en användare för att visa listan."
+            }))
+            
+        activities = list(
+            db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+            .scalars()
+            .all()
         )
+        html = tpl.render({
+            "request": request, "name": name, "category": category, "key": key,
+            "amount": amount, "date": date, "activities": activities, "users": users,
+            "message": None, "error": None
+        })
+        return HTMLResponse(html)
+
+    if not category or not key:
+        html = tpl.render({
+            "request": request, "name": name, "category": category, "key": key,
+            "amount": amount, "date": date, "activities": [], "message": None,
+            "error": "Category or key cannot be empty", "users": users
+        })
         return HTMLResponse(html)
         
     factors = _load_factor_map(db)
     if (category, key) not in factors:
         return HTMLResponse(
-            tpl.render(
-            {
+            tpl.render({
                 "request": request, "name": name, "category": category, "key": key,
-                "amount": amount, "date": date, "activities": activities, "users": users,
+                "amount": amount, "date": date, "activities": [], "users": users,
                 "message": None, 
                 "error": f"Fel: Det finns ingen utsläppsfaktor för kategori '{category}' och typ '{key}'."
             })
@@ -341,17 +363,11 @@ def ui_activity_save(
     activitiy = Activity(user_id=name, category=category, key=key, amount=amount, date=date)
     db.add(activitiy)
     db.commit()
-
-    activities = list(
-        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
-        .scalars()
-        .all()
-    )
     
     return HTMLResponse(
         tpl.render({
-            "request": request, "name": name, "category": category, "key": key,
-            "amount": amount, "date": date, "activities": activities, "users": users,
+            "request": request, "name": name, "category": "", "key": "",
+            "amount": 0.0, "date": date, "activities": [], "users": users,
             "message": "New activity added", "error": None
         })
     )
@@ -374,8 +390,9 @@ def ui_points_weekly(
 
     if user_id is not None and week_start:
         try:
-            start = dt.date.fromisoformat(week_start)
-            end = start + dt.timedelta(days=6)
+            chosen_date = dt.date.fromisoformat(week_start)
+            start, end = _week_bounds(chosen_date)
+            week_start = start.isoformat()
 
         except ValueError:
             err = "Fel datumformat. Använd formatet YYYY-MM-DD."
@@ -410,6 +427,18 @@ def ui_points_weekly(
                         continue
 
                 total = round(total, 2)
+    html = tpl.render(
+        {
+            "request": request,
+            "users": users,
+            "user_id": user_id,
+            "week_start": week_start,
+            "total": total,
+            "err": err,
+            "activities": activities,
+        }
+    )
+    
     return HTMLResponse(html)
 
 @app.post("/ui/activities/{activity_id}/delete", response_class=HTMLResponse)

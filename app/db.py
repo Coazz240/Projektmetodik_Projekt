@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .services import clients
+from .services import clients # noqa: F401
  
 import os
 from contextlib import contextmanager
