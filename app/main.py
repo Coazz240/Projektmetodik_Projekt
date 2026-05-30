@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Dict, Tuple
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -26,6 +27,8 @@ from .services.emissions import Factor, FactorMap, calculate_co2e
 
 app = FastAPI(title="Hållbarhetskollen API (starter)")
 templates = Jinja2Templates(directory="templates")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -70,6 +73,16 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_session))
     if not user:
         raise HTTPException(status_code=404, detail="user not found")
 
+    factors = _load_factor_map(db)
+    
+    if (payload.category, payload.key) not in factors:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Utsläppsfaktor saknas för kategori '{payload.category}' med typ '{payload.key}'."
+        )
+        
+    co2e = calculate_co2e(payload.category, payload.key, payload.amount, factors)
+    
     activity = Activity(
         user_id=payload.user_id,
         category=payload.category,
@@ -80,13 +93,7 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_session))
     db.add(activity)
     db.commit()
     db.refresh(activity)
-
-    factors = _load_factor_map(db)
-    try:
-        co2e = calculate_co2e(activity.category, activity.key, activity.amount, factors)
-    except KeyError:
-        co2e = None  # För starter: ok att returnera None; i projektet bör ni hantera detta bättre.
-
+    
     return ActivityOut(
         id=activity.id,
         user_id=activity.user_id,
@@ -132,7 +139,15 @@ def list_activities(
 
 def _week_bounds(week_start: dt.date) -> tuple[dt.date, dt.date]:
     # week_start antas vara måndag; i projektet kan ni validera/normalisera.
-    return week_start, week_start + dt.timedelta(days=6)
+    # return week_start, week_start + dt.timedelta(days=6)
+    current_day = week_start.weekday()
+    
+    if current_day != 0:
+        start_week = start_week - dt.timedelta(days=current_day)
+    
+    end_week = start_week + dt.timedelta (days=6)
+    
+    return start_week, end_week
 
 
 @app.get("/reports/weekly", response_model=WeeklyReportOut)
@@ -161,7 +176,6 @@ def weekly_report(
         try:
             total += calculate_co2e(a.category, a.key, a.amount, factors)
         except KeyError:
-            # I projektet: bestäm hur “okända faktorer” ska hanteras
             continue
 
     return WeeklyReportOut(
@@ -179,7 +193,7 @@ def ui_home(request: Request) -> HTMLResponse:
 @app.post("/ui/users", response_class=HTMLResponse)
 def ui_create_user(
     request: Request, name: str = Form(""), db: Session = Depends(get_session)
-) -> HTMLResponse:  # Form("") löser error om namn är helt tomt
+) -> HTMLResponse:
     name = name.strip()
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
 
@@ -311,6 +325,18 @@ def ui_activity_save(
             }
         )
         return HTMLResponse(html)
+        
+    factors = _load_factor_map(db)
+    if (category, key) not in factors:
+        return HTMLResponse(
+            tpl.render(
+            {
+                "request": request, "name": name, "category": category, "key": key,
+                "amount": amount, "date": date, "activities": activities, "users": users,
+                "message": None, 
+                "error": f"Fel: Det finns ingen utsläppsfaktor för kategori '{category}' och typ '{key}'."
+            })
+        )
 
     activitiy = Activity(user_id=name, category=category, key=key, amount=amount, date=date)
     db.add(activitiy)
@@ -321,24 +347,14 @@ def ui_activity_save(
         .scalars()
         .all()
     )
-
-    html = tpl.render(
-        {
-            "request": request,
-            "name": name,
-            "category": category,
-            "key": key,
-            "amount": amount,
-            "date": date,
-            "activities": activities,
-            "message": f"New activity added",
-            "error": None,
-            "users": users,
-        }
+    
+    return HTMLResponse(
+        tpl.render({
+            "request": request, "name": name, "category": category, "key": key,
+            "amount": amount, "date": date, "activities": activities, "users": users,
+            "message": "New activity added", "error": None
+        })
     )
-
-    return HTMLResponse(html)
-
 
 @app.get("/ui/reports/points", response_class=HTMLResponse)
 def ui_points_weekly(
@@ -348,7 +364,9 @@ def ui_points_weekly(
     db: Session = Depends(get_session),
 ) -> HTMLResponse:
 
-    tpl = templates.get_template("points_weekly.html")
+
+    users = db.execute(select(User).order_by(User.id.asc())).scalars().all()
+    tpl = templates.get_template("weekly.html")
 
     total = None
     err = None
@@ -392,16 +410,44 @@ def ui_points_weekly(
                         continue
 
                 total = round(total, 2)
-
-    html = tpl.render(
-        {
-            "request": request,
-            "user_id": user_id,
-            "week_start": week_start,
-            "total": total,
-            "err": err,
-            "activities": activities,
-        }
-    )
-
     return HTMLResponse(html)
+
+@app.post("/ui/activities/{activity_id}/delete", response_class=HTMLResponse)
+def ui_delete_activity(activity_id: int, request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
+
+    tpl = templates.get_template("activities.html")
+    
+    activity = db.get(Activity, activity_id)
+
+    if not activity:
+        users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+        return HTMLResponse(tpl.render(
+            {
+                "request": request,
+                "users": users,
+                "activities": None,
+                "name": "",
+                "error": f"Aktiviteten finns inte",
+            })
+        )
+        return HTMLResponse(html)
+        
+    user_id = activity.user_id
+
+    db.delete(activity)
+    db.commit()
+
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == user_id).order_by(Activity.date.asc())).scalars().all())
+
+    return HTMLResponse(
+        tpl.render({
+            "request": request,
+            "users": users,
+            "activities": activities,
+            "name": user_id,
+            "message": "Aktiviteten raderades.",
+            "error": None,
+        })
+    )

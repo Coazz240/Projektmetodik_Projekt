@@ -8,7 +8,6 @@ from typing import Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, declarative_base
-#from sqlalchemy.orm import declarative_base
 
 # Default: local SQLite i projektroten (enkel start).
 
