@@ -1,0 +1,133 @@
+body {
+    justify-content: center;
+    font-family: sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    justify-content: center;
+    justify-items: center;
+    font-size: 60px;
+}
+
+label {
+    display: block;
+    font-size: 20px;
+}
+
+#title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+input[type="text"],
+select,
+#date {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+button[type="submit"] {
+    width: 100%;
+    background-color: #4caf50;
+    color: white;
+    padding: 14px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+form {
+    background-color: gainsboro;
+    justify-self: center;
+    padding: 40px;
+    width: 30rem;
+    border-radius: 5px;
+}
+
+#main {
+    justify-content: center;
+    justify-items: center;
+}
+
+#nav {
+    display: flex;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px;
+    height: 50px;
+}
+
+#nav a {
+    box-sizing: border-box;
+    display: inline-block;
+    padding: 15px;
+    color: white;
+    background-color: #4caf50;
+    text-decoration: none;
+    margin: 0 5px;
+}
+
+#nav a:hover {
+    background-color: #45a049;
+}
+
+nav {
+    width: 100%;
+    margin: 0;
+    justify-items: center;
+    background-color: gainsboro;
+}
+
+table {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 40rem;
+}
+
+td,
+th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #04aa6d;
+    color: white;
+}
+
+td form {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+td form button[type="submit"] {
+    width: 100%;
+    background-color: indianred;
+}
+
+td form button[type="submit"]:hover {
+    background-color: firebrick;
+}

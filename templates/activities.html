@@ -4,9 +4,21 @@
         <meta charset="UTF-8" />
         <title>activities</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="/static/styles.css" />
     </head>
     <body>
-        <h1>Activity report</h1>
+        <nav>
+            <ul id="nav">
+                <li><a href="/ui">Main</a></li>
+                <li><a href="/ui/users">Handle Users</a></li>
+                <li><a href="/ui/activities">Activity Report</a></li>
+                <li><a href="/ui/">Weekly Report</a></li>
+                <li><a href="/docs">Docs</a></li>
+            </ul>
+        </nav>
+        <div id="title">
+            <h1>Activity report</h1>
+        </div>
         {% if message%}
         <p style="color: mediumspringgreen">{{message}}</p>
         {% endif %} {% if error %}
@@ -21,49 +33,49 @@
                 {% endfor %}
             </select>
             <br />
-            <br />
             <label>Category </label>
-            <input type="text" id="category" name="category" /> <br />
+            <input type="text" id="category" name="category" />
             <br />
             <label>Key </label>
-            <input type="text" id="key" name="key" /> <br />
+            <input type="text" id="key" name="key" />
             <br />
             <label>Amount </label>
-            <input type="text" id="amount" name="amount" /> <br />
+            <input type="text" id="amount" name="amount" />
             <br />
             <label>Date </label>
-            <input type="date" id="date" name="date" /> <br />
+            <input type="date" id="date" name="date" />
             <br />
             <button id="save_activity" name="save_activity" type="submit">
                 Save
             </button>
             <button
                 style="background-color: darkgray"
-                type="button"
+                type="submit"
                 name="action"
             >
                 Show List
             </button>
         </form>
-
-        <h2>List of Activites</h2>
-        <table border="1" cellpadding="6">
-            <tr>
-                <th>Category</th>
-                <th>Key</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Åtgärd</th>
-            </tr>
-            {% for a in activities %}
-            <tr>
-                <th>{{ a.category }}</th>
-                <th>{{ a.key }}</th>
-                <th>{{ a.amount }}</th>
-                <th>{{ a.date }}</th>
-                <th><button>Delete</button></th>
-            </tr>
-            {% endfor %}
-        </table>
+        <div id="main">
+            <h2>List of Activites</h2>
+            <table border="1" cellpadding="6">
+                <tr>
+                    <th>Category</th>
+                    <th>Key</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Åtgärd</th>
+                </tr>
+                {% for a in activities %}
+                    <tr>
+                        <th>{{ a.category }}</th>
+                        <th>{{ a.key }}</th>
+                        <th>{{ a.amount }}</th>
+                        <th>{{ a.date }}</th>
+                        <th><button>Delete</button></th>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
     </body>
 </html>
