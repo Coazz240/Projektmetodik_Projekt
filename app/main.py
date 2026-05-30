@@ -5,9 +5,12 @@ from typing import Dict, Tuple
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from app.db import Base
 
 from .db import get_session
 from .models import Activity, EmissionFactor, User
@@ -24,7 +27,7 @@ from .services.emissions import Factor, FactorMap, calculate_co2e
 app = FastAPI(title="Hållbarhetskollen API (starter)")
 templates = Jinja2Templates(directory="templates")
 
-from app.db import Base
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/health")
@@ -161,8 +164,10 @@ def weekly_report(
             # I projektet: bestäm hur “okända faktorer” ska hanteras
             continue
 
-    return WeeklyReportOut(user_id=user_id, week_start=start, week_end=end, total_co2e=round(total, 2))
-    
+    return WeeklyReportOut(
+        user_id=user_id, week_start=start, week_end=end, total_co2e=round(total, 2)
+    )
+
 
 @app.get("/ui", response_class=HTMLResponse)
 def ui_home(request: Request) -> HTMLResponse:
@@ -333,7 +338,8 @@ def ui_activity_save(
     )
 
     return HTMLResponse(html)
-        
+
+
 @app.get("/ui/reports/points", response_class=HTMLResponse)
 def ui_points_weekly(
     request: Request,
@@ -387,6 +393,15 @@ def ui_points_weekly(
 
                 total = round(total, 2)
 
-    html = tpl.render({"request": request, "user_id": user_id, "week_start": week_start, "total": total, "err": err, "activities": activities})
-        
+    html = tpl.render(
+        {
+            "request": request,
+            "user_id": user_id,
+            "week_start": week_start,
+            "total": total,
+            "err": err,
+            "activities": activities,
+        }
+    )
+
     return HTMLResponse(html)

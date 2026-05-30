@@ -5,58 +5,52 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 			<title>23brho01</title>
-			<style>
-			</style>
+			<link rel="stylesheet" href="/static/styles.css">
 	</head>
-	<style>
-	body {
-	font-size: 20px;
-	padding: 8px;
-	}
-
-	input {
-	width: 220px;
-	height: 20px;
-	}
-
-	button {
-	width: 100px;
-	}
-	</style>
 	<body>
+        <nav>
+            <ul id="nav">
+                <li><a href="/ui">Main</a></li>
+                <li><a href="/ui/users">Handle Users</a></li>
+                <li><a href="/ui/activities">Activity Report</a></li>
+                <li><a href="/ui/">Weekly Report</a></li>
+                <li><a href="/docs">Docs</a></li>
+            </ul>
+        </nav>
+    	<div id="main">
+        {% if message %}
+      		<p style="color: green;">{{ message }}</p>
+       	{% endif %}
+       	{% if error %}
+      		<p style="color: red;">{{ error }}</p>
+       	{% endif %}
 
-{% if message %}
-		<p style="color: green;">{{ message }}</p>
-	{% endif %}
-	{% if error %}
-		<p style="color: red;">{{ error }}</p>
-	{% endif %}
+       	<h2>Skapa användare</h2>
+       	<form method="post" action="/ui/users">
+      		<input type="text" id="name" name="name">
+      		<button type="submit" onclick="">Submit</button>
+       	</form>
 
-	<h2>Skapa användare</h2>
-	<form method="post" action="/ui/users">
-		<input type="text" id="name" name="name">
-		<button type="submit" onclick="">Submit</button>
-	</form>
-
-	<h2>Befintliga användare</h2>
-	<table border="1" cellpadding="6" cellspacing="0">
-		<tr>
-			<th>ID</th>
-			<th>Namn</th>
-			<th>Åtgärd</th>
-		</tr>
-		{% for u in users %}
-			<tr>
-				<td>{{ u.id }}</td>
-				<td>{{ u.name }}</td>
-				<td>
-					<form method="post" action="/ui/users/{{u.id}}/delete">
-						<button type="submit" onclick="return confirm('Ta bort användaren {{ u.name }}?';">
-							Ta bort
-						</button>
-					</form>
-				</td>
-			</tr>
-		{% endfor %}
+       	<h2>Befintliga användare</h2>
+       	<table border="1" cellpadding="6" cellspacing="0">
+      		<tr>
+     			<th>ID</th>
+     			<th>Namn</th>
+     			<th>Åtgärd</th>
+      		</tr>
+      		{% for u in users %}
+     			<tr>
+        				<td>{{ u.id }}</td>
+        				<td>{{ u.name }}</td>
+        				<td>
+       					<form method="post" action="/ui/users/{{u.id}}/delete">
+      						<button type="submit" onclick="return confirm('Ta bort användaren {{ u.name }}?';">
+     							Ta bort
+      						</button>
+       					</form>
+        				</td>
+     			</tr>
+      		{% endfor %}
+    	</div>
 	</body>
 </html>
