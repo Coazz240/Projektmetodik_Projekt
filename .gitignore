@@ -1,0 +1,21 @@
+# Python cache/bytecode/slagg
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Packaging info
+*.egg-info/
+it_projektmetodik.egg-info/
+
+# SQLite/db-filer
+app.db
+
+# Miljöfiler/editor-slask
+.env
+.vscode/
+.idea/
+
+# OS: Mac/Windows slask
+.DS_Store
+Thumbs.db
