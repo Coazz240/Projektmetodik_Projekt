@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="sv">
+    <head>
+        <meta charset="UTF-8" />
+        <title>activities</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
+	<body>
+		<nav>
+            <ul id="nav">
+                <li><a href="/ui">Main</a></li>
+                <li><a href="/ui/users">Handle Users</a></li>
+                <li><a href="/ui/activities">Activity Report</a></li>
+                <li><a href="/ui/reports/points">Weekly Report</a></li>
+                <li><a href="/docs">Docs</a></li>
+            </ul>
+        </nav>
+		<div id="title">
+			<h1>Veckorapport</h1>
+		</div>
+	
+{% if message %}
+		<p style="color: green;">{{ message }}</p>
+	{% endif %}
+	{% if error %}
+		<p style="color: red;">{{ error }}</p>
+	{% endif %}
+	
+	<form method="get" action="/ui/reports/points">
+		<div class="forms">
+		
+			<label for="user_id">Visa rapport för:</label>
+			<select name="user_id" id="user_id" required>
+				<option value="" selected>Välj Användare</option>
+				{% for user in users %}
+					<option value="{{ user.id }}">{{ user.name }}</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="forms">
+
+			<label for="week_start">Ange veckostart</label>
+			<input type="date" id="week_start" name="week_start" required>
+			<span>(YYYY-MM-DD, måndag)</span>
+		</div>
+		
+		<button type="submit">Visa</button>
+	</form>
+	<hr>
+
+    {% if total is not none and not err %}
+		<div id="main">
+        <h2>Resultat för veckan</h2>
+        <p><strong>Total CO₂e:</strong> {{ total }} kg</p>
+        
+        {% endif %}
+		</div>
+	
+	</body>
+</html>

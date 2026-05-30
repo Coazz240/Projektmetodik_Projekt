@@ -12,38 +12,43 @@
                 <li><a href="/ui">Main</a></li>
                 <li><a href="/ui/users">Handle Users</a></li>
                 <li><a href="/ui/activities">Activity Report</a></li>
-                <li><a href="/ui/">Weekly Report</a></li>
+                <li><a href="/ui/reports/points">Weekly Report</a></li>
                 <li><a href="/docs">Docs</a></li>
             </ul>
         </nav>
         <div id="title">
             <h1>Activity report</h1>
         </div>
-        {% if message%}
-        <p style="color: mediumspringgreen">{{message}}</p>
-        {% endif %} {% if error %}
-        <p style="color: red">{{error}}</p>
+        
+        {% if message %}
+        <p style="color: mediumspringgreen">{{ message }}</p>
+        {% endif %} 
+        
+        {% if error %}
+        <p style="color: red">{{ error }}</p>
         {% endif %}
+        
         <form method="post" action="/ui/activities">
             <label> Select user: </label>
-            <select required="true" id="name" name="name">
-                <option>Välj en användare</option>
+            <select required id="name" name="name">
+                <option value="">Välj en användare</option>
                 {% for u in users %}
-                <option value="{{u.id}}">{{ u.name }}</option>
+                <option value="{{ u.id }}" {% if u.id == name|int %}selected{% endif %}>{{ u.name }}</option>
                 {% endfor %}
             </select>
             <br />
+            
             <label>Category </label>
-            <input type="text" id="category" name="category" />
+            <input type="text" id="category" name="category" value="{{ category or '' }}" />
             <br />
             <label>Key </label>
-            <input type="text" id="key" name="key" />
+            <input type="text" id="key" name="key" value="{{ key or '' }}" />
             <br />
             <label>Amount </label>
-            <input type="text" id="amount" name="amount" />
+            <input type="number" id="amount" name="amount" step="any" value="{{ amount or '' }}" required /> <br />
             <br />
             <label>Date </label>
-            <input type="date" id="date" name="date" />
+            <input type="date" id="date" name="date" value="{{ date or '' }}" />
             <br />
             <button id="save_activity" name="save_activity" type="submit">
                 Save
@@ -52,30 +57,47 @@
                 style="background-color: darkgray"
                 type="submit"
                 name="action"
+                value="show"
+                formnovalidate
             >
                 Show List
             </button>
         </form>
+        
         <div id="main">
-            <h2>List of Activites</h2>
+            <h2>List of Activities</h2>
+            {% if activities %}
             <table border="1" cellpadding="6">
-                <tr>
-                    <th>Category</th>
-                    <th>Key</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Åtgärd</th>
-                </tr>
-                {% for a in activities %}
+                <thead>
                     <tr>
-                        <th>{{ a.category }}</th>
-                        <th>{{ a.key }}</th>
-                        <th>{{ a.amount }}</th>
-                        <th>{{ a.date }}</th>
-                        <th><button>Delete</button></th>
+                        <th>Category</th>
+                        <th>Key</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Åtgärd</th>
                     </tr>
-                {% endfor %}
+                </thead>
+                <tbody>
+                    {% for a in activities %}
+                        <tr>
+                            <td>{{ a.category }}</td>
+                            <td>{{ a.key }}</td>
+                            <td>{{ a.amount }}</td>
+                            <td>{{ a.date }}</td>
+                            <td>
+                                <form method="post" action="/ui/activities/{{ a.id }}/delete" style="display:inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Är du säker på att du vill radera denna aktivitet?');">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
+            {% else %}
+            <p style="color: gray; font-style: italic;">Välj en användare och klicka på "Show List" för att visa historik.</p>
+            {% endif %}
         </div>
     </body>
 </html>
