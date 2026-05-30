@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Dict, Tuple
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Form, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -25,6 +25,7 @@ app = FastAPI(title="Hållbarhetskollen API (starter)")
 templates = Jinja2Templates(directory="templates")
 
 from app.db import Base
+
 
 @app.get("/health")
 def health() -> dict:
@@ -49,7 +50,9 @@ def _load_factor_map(db: Session) -> FactorMap:
     factors = db.execute(select(EmissionFactor)).scalars().all()
     mapping: FactorMap = {}
     for f in factors:
-        mapping[(f.category, f.key)] = Factor(category=f.category, key=f.key, unit=f.unit, co2e_per_unit=f.co2e_per_unit)
+        mapping[(f.category, f.key)] = Factor(
+            category=f.category, key=f.key, unit=f.unit, co2e_per_unit=f.co2e_per_unit
+        )
     return mapping
 
 
@@ -167,52 +170,168 @@ def ui_home(request: Request) -> HTMLResponse:
     html = tpl.render({"request": request})
     return HTMLResponse(html)
 
+
 @app.post("/ui/users", response_class=HTMLResponse)
-def ui_create_user(request: Request, name: str = Form(""), db: Session = Depends(get_session)) -> HTMLResponse: #Form("") löser error om namn är helt tomt
+def ui_create_user(
+    request: Request, name: str = Form(""), db: Session = Depends(get_session)
+) -> HTMLResponse:  # Form("") löser error om namn är helt tomt
     name = name.strip()
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
-    
+
     tpl = templates.get_template("create_user.html")
-    
+
     if not name:
-        html = tpl.render({"request": request, "users": users, "message": None,
-        "error": "Name får inte vara tomt."})
+        html = tpl.render(
+            {
+                "request": request,
+                "users": users,
+                "message": None,
+                "error": "Name får inte vara tomt.",
+            }
+        )
         return HTMLResponse(html)
-        
+
     user = User(name=name)
     db.add(user)
     db.commit()
 
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
-    html = tpl.render({"request": request, "users": users, "message": f"Skapade användare '{user.name}'", "error": None})
+    html = tpl.render(
+        {
+            "request": request,
+            "users": users,
+            "message": f"Skapade användare '{user.name}'",
+            "error": None,
+        }
+    )
     return HTMLResponse(html)
-    
+
+
 @app.get("/ui/users", response_class=HTMLResponse)
 def ui_users(request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
-    
+
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
     tpl = templates.get_template("create_user.html")
     html = tpl.render({"request": request, "users": users, "message": None, "error": None})
     return HTMLResponse(html)
 
+
 @app.post("/ui/users/{user_id}/delete", response_class=HTMLResponse)
 def ui_delete_user(user_id, request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
 
     tpl = templates.get_template("create_user.html")
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
     user = db.get(User, user_id)
-    
+
     if not user:
-        html = tpl.render({"request": request, "users": users, "message": None, 
-        "error": f"Användare '{user.id}' finns inte"})
+        html = tpl.render(
+            {
+                "request": request,
+                "users": users,
+                "message": None,
+                "error": f"Användare '{user.id}' finns inte",
+            }
+        )
         return HTMLResponse(html)
-    
+
     deleted_name = user.name
     db.delete(user)
     db.commit()
-    
+
     users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
     tpl = templates.get_template("create_user.html")
-    html = tpl.render({"request": request, "users": users, "message": f"Raderade användare '{deleted_name}' (id={user_id})", "error": None})
+    html = tpl.render(
+        {
+            "request": request,
+            "users": users,
+            "message": f"Raderade användare '{deleted_name}' (id={user_id})",
+            "error": None,
+        }
+    )
+    return HTMLResponse(html)
+
+
+@app.get("/ui/activities", response_class=HTMLResponse)
+def ui_load_activity(
+    request: Request,
+    db: Session = Depends(get_session),
+    name: str = Form(""),
+) -> HTMLResponse:
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
+    tpl = templates.get_template("activities.html")
+    html = tpl.render({"request": request, "users": users, "activities": activities, "name": name})
+
+    return HTMLResponse(html)
+
+
+@app.post("/ui/activities", response_class=HTMLResponse)
+def ui_activity_save(
+    request: Request,
+    name: str = Form(),
+    category: str = Form(""),
+    key: str = Form(""),
+    amount: float = Form(0.0),
+    date: dt.date = Form(None),
+    db: Session = Depends(get_session),
+) -> HTMLResponse:
+    tpl = templates.get_template("activities.html")
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
+    users = list(db.execute(select(User).order_by(User.id.asc())).scalars().all())
+
+    category = category.strip()
+    key = key.strip()
+
+    if not category or not key:
+        html = tpl.render(
+            {
+                "request": request,
+                "name": name,
+                "category": category,
+                "key": key,
+                "amount": amount,
+                "date": date,
+                "activities": activities,
+                "message": None,
+                "error": "Category or key cannot be empty",
+                "users": users,
+            }
+        )
+        return HTMLResponse(html)
+
+    activitiy = Activity(user_id=name, category=category, key=key, amount=amount, date=date)
+    db.add(activitiy)
+    db.commit()
+
+    activities = list(
+        db.execute(select(Activity).where(Activity.user_id == name).order_by(Activity.date.asc()))
+        .scalars()
+        .all()
+    )
+
+    html = tpl.render(
+        {
+            "request": request,
+            "name": name,
+            "category": category,
+            "key": key,
+            "amount": amount,
+            "date": date,
+            "activities": activities,
+            "message": f"New activity added",
+            "error": None,
+            "users": users,
+        }
+    )
+
     return HTMLResponse(html)
         
 @app.get("/ui/reports/points", response_class=HTMLResponse)

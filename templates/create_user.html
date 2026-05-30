@@ -13,31 +13,31 @@
 	font-size: 20px;
 	padding: 8px;
 	}
-	
+
 	input {
 	width: 220px;
 	height: 20px;
 	}
-	
+
 	button {
 	width: 100px;
 	}
 	</style>
 	<body>
-	
+
 {% if message %}
 		<p style="color: green;">{{ message }}</p>
 	{% endif %}
 	{% if error %}
 		<p style="color: red;">{{ error }}</p>
 	{% endif %}
-	
+
 	<h2>Skapa användare</h2>
 	<form method="post" action="/ui/users">
 		<input type="text" id="name" name="name">
 		<button type="submit" onclick="">Submit</button>
 	</form>
-	
+
 	<h2>Befintliga användare</h2>
 	<table border="1" cellpadding="6" cellspacing="0">
 		<tr>
